@@ -11,6 +11,7 @@ using namespace std;
 unsigned seed = chrono::system_clock::now().time_since_epoch().count();
 mt19937 randomGen(seed);
 sf::Font font;
+sf::Font scoreFont;
 
 class GameLogic {
     int curPlayer;
@@ -39,7 +40,31 @@ class GameLogic {
 
     void setState(int value) {
         state = value;
-    } 
+    }
+};
+
+class TextureManager {
+  map<string, sf::Texture> textures;
+
+public:
+  TextureManager(): textures(){}
+
+  const sf::Texture& getTexture( const std::string& filename ){
+  	for(map<string, sf::Texture>::const_iterator it = textures.begin(); it != textures.end(); ++it){
+  		if( filename == it->first ){
+  			return it->second;
+  		}
+  	}
+
+  	sf::Texture image;
+  	if(image.loadFromFile( filename )){
+  		textures[filename] = image;
+  		return textures[filename];
+  	}
+
+  	textures[filename] = image;
+  	return textures[filename];
+  }
 };
 
 class Square {
@@ -112,10 +137,13 @@ class Square {
 class Board {
     int size;
     vector<Square> square;
+    //sf::Sprite ladder;
+    TextureManager textureManager;
 
     public:
-    Board(int s): size(s) {
+    Board(int s, TextureManager tm): size(s), textureManager(tm) {
         square = vector<Square>(size);
+        //ladder.setTexture(textureManager.getTexture("sprites/ladder.png"));
     }
 
     void initBoard() {
@@ -173,8 +201,9 @@ class Board {
                     sf::Vertex(sf::Vector2f(square[i].getPosX() + 32, square[i].getPosY() + 32)),
                     sf::Vertex(sf::Vector2f(square[square[i].getLeadsTo()].getPosX() + 32, square[square[i].getLeadsTo()].getPosY() + 32))
                 };
-
                 if (square[i].getLeadsTo() > i) {
+                    //ladder.setPosition(sf::Vector2f(square[i].getPosX() + 32, square[i].getPosY() + 32));
+                    //window.draw(ladder);
                     line[0].color = sf::Color::Blue;
                     line[1].color = sf::Color::Blue;
                 }
@@ -182,7 +211,6 @@ class Board {
                     line[0].color = sf::Color::Red;
                     line[1].color = sf::Color::Red;
                 }
-
                 window.draw(line, 2, sf::Lines);
             }
         }
@@ -193,43 +221,52 @@ class Player {
     int xOffset, yOffset;
     int squarePos, gold, diamonds;
     sf::CircleShape token;
+    sf::Sprite minecart;
+    TextureManager textureManager;
 
     public:
     Player() {};
-    Player(Board b, int p) {
+    Player(Board b, int p, TextureManager tm): textureManager(tm) {
         squarePos = 0;
         gold = 0;
         diamonds = 0;
 
         token = sf::CircleShape(16);
+        minecart.setTexture(textureManager.getTexture("sprites/minecart"+to_string(p)+".png"));
+        minecart.setScale(sf::Vector2f(.12f, .12f));
 
         switch (p) {
             case 1:
                 xOffset = 0;
                 yOffset = 0;
-                token.setFillColor(sf::Color::Red);
+                token.setFillColor(sf::Color::Transparent);
                 break;
             case 2:
                 xOffset = 32;
                 yOffset = 0;
-                token.setFillColor(sf::Color::Green);
+                token.setFillColor(sf::Color::Transparent);
                 break;
             case 3:
                 xOffset = 0;
                 yOffset = 32;
-                token.setFillColor(sf::Color::Blue);
+                token.setFillColor(sf::Color::Transparent);
                 break;
             case 4:
                 xOffset = 32;
                 yOffset = 32;
-                token.setFillColor(sf::Color(255,0,255));
+                token.setFillColor(sf::Color::Transparent);
         }
 
         token.setPosition(b.getSquare(squarePos).getPosX() + xOffset, b.getSquare(squarePos).getPosY() + yOffset);
+        minecart.setPosition(b.getSquare(squarePos).getPosX() + xOffset, b.getSquare(squarePos).getPosY() + yOffset);
     }
 
     sf::CircleShape getShape() {
         return token;
+    }
+
+    sf::Sprite getPlayerSprite() {
+        return minecart;
     }
 
     void move(int value, Board& b, GameLogic& g, vector<Player>& ps) {
@@ -250,6 +287,7 @@ class Player {
         }
 
         token.setPosition(b.getSquare(squarePos).getPosX() + xOffset, b.getSquare(squarePos).getPosY() + yOffset);
+        minecart.setPosition(b.getSquare(squarePos).getPosX() + xOffset, b.getSquare(squarePos).getPosY() + yOffset);
 
         if (squarePos == 99) {
             g.setState(3);
@@ -278,6 +316,7 @@ class Player {
 
                     squarePos = b.getSquare(squarePos).getLeadsTo();
                     token.setPosition(b.getSquare(squarePos).getPosX() + xOffset, b.getSquare(squarePos).getPosY() + yOffset);
+                    minecart.setPosition(b.getSquare(squarePos).getPosX() + xOffset, b.getSquare(squarePos).getPosY() + yOffset);
                     g.nextPlayer();
                 }
             }
@@ -328,6 +367,7 @@ class Player {
     void setSquarePos(int value, Board b) {
         squarePos = value;
         token.setPosition(b.getSquare(squarePos).getPosX() + xOffset, b.getSquare(squarePos).getPosY() + yOffset);
+        minecart.setPosition(b.getSquare(squarePos).getPosX() + xOffset, b.getSquare(squarePos).getPosY() + yOffset);
     }
 };
 
@@ -340,9 +380,9 @@ class Dice {
     public:
     Dice() {
         value = 6;
-        valueText.setFont(font);
+        valueText.setFont(scoreFont);
         valueText.setString(to_string(value));
-        valueText.setCharacterSize(50);
+        valueText.setCharacterSize(40);
         valueText.setColor(sf::Color(255,255,255));
         valueText.setPosition(640 + 80 - 20, 50);
 
@@ -487,34 +527,44 @@ class LadderMenu {
 
 class Leaderboard {
     vector<sf::CircleShape> players;
+    vector<sf::Sprite> playerSprites;
     vector<sf::Text> goldText, diamondText;
     sf::Text winText;
+    TextureManager textureManager;
+    sf::Sprite diamond;
+    sf::Sprite gold;
 
     public:
-    Leaderboard(int n, vector<Player> p): players(vector<sf::CircleShape>(n)), goldText(vector<sf::Text>(n)), diamondText(vector<sf::Text>(n)) {
+    Leaderboard(int n, vector<Player> p, TextureManager tm): players(vector<sf::CircleShape>(n)), goldText(vector<sf::Text>(n)), diamondText(vector<sf::Text>(n)), playerSprites(vector<sf::Sprite>(n)), textureManager(tm) {
         int x = 655;
         int y = 180;
 
+        diamond.setTexture(textureManager.getTexture("sprites/diamond.png"));
+        gold.setTexture(textureManager.getTexture("sprites/gold.png"));
         winText.setFont(font);
         winText.setCharacterSize(50);
         winText.setPosition(120, 120);
 
         for (int i = 0; i < n; i++) {
             players[i] = p[i].getShape();
+            playerSprites[i] = p[i].getPlayerSprite();
             players[i].setPosition(x, y + 50 * i);
+            playerSprites[i].setPosition(x, y + 50 * i);
 
-            goldText[i].setFont(font);
+            goldText[i].setFont(scoreFont);
             goldText[i].setString("0");
-            goldText[i].setCharacterSize(25);
-            goldText[i].setColor(sf::Color::Yellow);
+            goldText[i].setCharacterSize(20);
+            goldText[i].setColor(sf::Color(255,245,105));
             goldText[i].setPosition(x + 50, y + 50 * i);
 
-            diamondText[i].setFont(font);
+            diamondText[i].setFont(scoreFont);
             diamondText[i].setString("0");
-            diamondText[i].setCharacterSize(25);
-            diamondText[i].setColor(sf::Color(0,255,255));
-            diamondText[i].setPosition(x + 100, y + 50 * i);
+            diamondText[i].setCharacterSize(20);
+            diamondText[i].setColor(sf::Color(182,232,250));
+            diamondText[i].setPosition(x + 90, y + 50 * i);
         }
+        diamond.setPosition(x+90, y+200);
+        gold.setPosition(x+50, y+200);
     }
 
     void drawLeaderboard(sf::RenderWindow& window, vector<Player> p, GameLogic g) {
@@ -524,6 +574,7 @@ class Leaderboard {
                 players[i].setOutlineThickness(2);
             }
             window.draw(players[i]);
+            window.draw(playerSprites[i]);
 
             goldText[i].setString(to_string(p[i].getGold()));
             window.draw(goldText[i]);
@@ -531,6 +582,8 @@ class Leaderboard {
             diamondText[i].setString(to_string(p[i].getDiamonds()));
             window.draw(diamondText[i]);
         }
+        window.draw(diamond);
+        window.draw(gold);
     }
 
     void win(vector<Player> p, sf::RenderWindow& window) {
@@ -552,7 +605,7 @@ class Leaderboard {
             }
         }
 
-        winText.setColor(p[winner].getShape().getFillColor());
+        winText.setColor(sf::Color::Blue);
         winText.setString("Player " + to_string(winner + 1) + " wins!");
         window.draw(winText);
     }
@@ -561,18 +614,21 @@ class Leaderboard {
 int main() {
     sf::RenderWindow window(sf::VideoMode(800,640), "Snakes and Ladders!");
     font.loadFromFile("Verdana.ttf");
-    
+    scoreFont.loadFromFile("FFFFORWA.TTF");
+
+    TextureManager tm;
+
     GameLogic game;
-    Board board(100);
+    Board board(100, tm);
     vector<Player> players(N_PLAYERS);
     Dice dice;
 
     board.initBoard();
     for (int i = 0; i < N_PLAYERS; i++) {
-        players[i] = Player(board, i+1);
+        players[i] = Player(board, i+1, tm);
     }
 
-    Leaderboard leaderboard(N_PLAYERS, players);
+    Leaderboard leaderboard(N_PLAYERS, players, tm);
     LadderMenu menu;
 
     while (window.isOpen()) {
@@ -602,6 +658,7 @@ int main() {
         board.drawStairsAndSnakes(window);
         for (int i = 0; i < N_PLAYERS; i++) {
             window.draw(players[i].getShape());
+            window.draw(players[i].getPlayerSprite());
         }
         dice.drawDice(window);
         leaderboard.drawLeaderboard(window, players, game);
