@@ -232,7 +232,7 @@ class Player {
         return token;
     }
 
-    void move(int value, Board& b, GameLogic& g) {
+    void move(int value, Board& b, GameLogic& g, vector<Player>& ps) {
         int mult = 1;
 
         while (value > 0) {
@@ -257,6 +257,21 @@ class Player {
                     g.setState(1);
                 }
                 else {
+                    for (int i = 0; i < N_PLAYERS; i++) {
+                        if (ps[i].getShape().getFillColor() != token.getFillColor()) {
+                            if (ps[i].getSquarePos() == squarePos) {
+                                if (ps[i].getGold() >= 5) {
+                                    ps[i].setGold(ps[i].getGold() - 5);
+                                    gold += 5;
+                                }
+                                else {
+                                    gold += ps[i].getGold();
+                                    ps[i].setGold(0);
+                                }
+                            }
+                        }
+                    }
+
                     squarePos = b.getSquare(squarePos).getLeadsTo();
                     g.nextPlayer();
                 }
@@ -266,6 +281,21 @@ class Player {
             }
         }
         else {
+            for (int i = 0; i < N_PLAYERS; i++) {
+                if (ps[i].getShape().getFillColor() != token.getFillColor()) {
+                    if (ps[i].getSquarePos() == squarePos) {
+                        if (ps[i].getGold() >= 5) {
+                            ps[i].setGold(ps[i].getGold() - 5);
+                            gold += 5;
+                        }
+                        else {
+                            gold += ps[i].getGold();
+                            ps[i].setGold(0);
+                        }
+                    }
+                }
+            }
+
             g.nextPlayer();
         }
     }
@@ -335,13 +365,13 @@ class Dice {
         valueText.setString(to_string(value));
     }
 
-    void checkDiceRoll(sf::RenderWindow& window, Player& player, Board& board, GameLogic& game) {
+    void checkDiceRoll(sf::RenderWindow& window, Player& player, Board& board, GameLogic& game, vector<Player>& vPlayers) {
         sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
 
         if (mousePosition.x >= button.getPosition().x && mousePosition.x <= button.getPosition().x + button.getSize().x
         && mousePosition.y >= button.getPosition().y && mousePosition.y <= button.getPosition().y + button.getSize().y) {
             this->rollDice();
-            player.move(value, board, game);
+            player.move(value, board, game, vPlayers);
         }
     }
 };
@@ -390,7 +420,7 @@ class LadderMenu {
         }
     }
 
-    void checkAccept(sf::RenderWindow& window, GameLogic& game, Player& p) {
+    void checkAccept(sf::RenderWindow& window, GameLogic& game, Player& p, vector<Player>& ps) {
         sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
 
         if (mousePosition.x >= acceptButton.getPosition().x && mousePosition.x <= acceptButton.getPosition().x + acceptButton.getSize().x
@@ -401,17 +431,49 @@ class LadderMenu {
             else if (game.getState() == 2) {
                 p.setDiamonds(p.getDiamonds() + 1);
             }
+
+            for (int i = 0; i < N_PLAYERS; i++) {
+                if (ps[i].getShape().getFillColor() != p.getShape().getFillColor()) {
+                    if (ps[i].getSquarePos() == p.getSquarePos()) {
+                        if (ps[i].getGold() >= 5) {
+                            ps[i].setGold(ps[i].getGold() - 5);
+                            p.setGold(p.getGold() + 5);
+                        }
+                        else {
+                            p.setGold(p.getGold() + ps[i].getGold());
+                            ps[i].setGold(0);
+                        }
+                    }
+                }
+            }
+
             game.setState(0);
             game.nextPlayer();
         }
     }
 
-    void checkRefuse(sf::RenderWindow& window, GameLogic& game, Player& p, Board& b) {
+    void checkRefuse(sf::RenderWindow& window, GameLogic& game, Player& p, Board& b, vector<Player>& ps) {
         sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
 
         if (mousePosition.x >= refuseButton.getPosition().x && mousePosition.x <= refuseButton.getPosition().x + refuseButton.getSize().x
             && mousePosition.y >= refuseButton.getPosition().y && mousePosition.y <= refuseButton.getPosition().y + refuseButton.getSize().y) {
             p.setSquarePos(b.getSquare(p.getSquarePos()).getLeadsTo(), b);
+
+            for (int i = 0; i < N_PLAYERS; i++) {
+                if (ps[i].getShape().getFillColor() != p.getShape().getFillColor()) {
+                    if (ps[i].getSquarePos() == p.getSquarePos()) {
+                        if (ps[i].getGold() >= 5) {
+                            ps[i].setGold(ps[i].getGold() - 5);
+                            p.setGold(p.getGold() + 5);
+                        }
+                        else {
+                            p.setGold(p.getGold() + ps[i].getGold());
+                            ps[i].setGold(0);
+                        }
+                    }
+                }
+            }
+
             game.setState(0);
             game.nextPlayer();
         }
@@ -488,11 +550,11 @@ int main() {
             if (event.type == sf::Event::MouseButtonPressed) {
                 if (event.mouseButton.button == sf::Mouse::Left) {
                     if (game.getState() == 0) {
-                        dice.checkDiceRoll(window, players[game.getCurPlayer()], board, game);
+                        dice.checkDiceRoll(window, players[game.getCurPlayer()], board, game, players);
                     }
                     else {
-                        menu.checkAccept(window, game, players[game.getCurPlayer()]);
-                        menu.checkRefuse(window, game, players[game.getCurPlayer()], board);
+                        menu.checkAccept(window, game, players[game.getCurPlayer()], players);
+                        menu.checkRefuse(window, game, players[game.getCurPlayer()], board, players);
                     }
                 }
             }
