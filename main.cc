@@ -277,6 +277,23 @@ class Player {
     int getDiamonds() {
         return diamonds;
     }
+
+    int getSquarePos() {
+        return squarePos;
+    }
+
+    void setGold(int value) {
+        gold = value;
+    }
+
+    void setDiamonds(int value) {
+        diamonds = value;
+    }
+
+    void setSquarePos(int value, Board b) {
+        squarePos = value;
+        token.setPosition(b.getSquare(squarePos).getPosX() + xOffset, b.getSquare(squarePos).getPosY() + yOffset);
+    }
 };
 
 class Dice {
@@ -324,26 +341,24 @@ class Dice {
         if (mousePosition.x >= button.getPosition().x && mousePosition.x <= button.getPosition().x + button.getSize().x
         && mousePosition.y >= button.getPosition().y && mousePosition.y <= button.getPosition().y + button.getSize().y) {
             this->rollDice();
+            player.move(value, board, game);
         }
-
-        player.move(value, board, game);
-        //game.nextPlayer();
     }
 };
 
 class LadderMenu {
     sf::Text acceptText, refuseText;
-    sf::RectangleShape button1, button2;
+    sf::RectangleShape refuseButton, acceptButton;
 
     public:
     LadderMenu() {
-        button1 = sf::RectangleShape(sf::Vector2f(125,39));
-        button1.setPosition(640 + 15, 530);
-        button1.setFillColor(sf::Color(255,255,255));
+        refuseButton = sf::RectangleShape(sf::Vector2f(125,39));
+        refuseButton.setPosition(640 + 15, 530);
+        refuseButton.setFillColor(sf::Color(255,255,255));
 
-        button2 = sf::RectangleShape(sf::Vector2f(125,39));
-        button2.setPosition(640 + 15, 580);
-        button2.setFillColor(sf::Color(255,255,255));
+        acceptButton = sf::RectangleShape(sf::Vector2f(125,39));
+        acceptButton.setPosition(640 + 15, 580);
+        acceptButton.setFillColor(sf::Color(255,255,255));
 
         acceptText.setFont(font);
         acceptText.setCharacterSize(15);
@@ -358,11 +373,48 @@ class LadderMenu {
         refuseText.setString("Go Upstairs");
     }
 
-    void drawMenu(sf::RenderWindow& window) {
-        window.draw(button1);
-        window.draw(button2);
-        window.draw(acceptText);
-        window.draw(refuseText);
+    void drawMenu(sf::RenderWindow& window, GameLogic g) {
+        if (g.getState() != 0) {
+            if (g.getState() == 1) {
+                acceptText.setString("Use Diamond");
+                refuseText.setString("Go Downstairs");
+            }
+            else if (g.getState() == 2) {
+                acceptText.setString("Get Diamond");
+                refuseText.setString("Go Upstairs");
+            }
+            window.draw(refuseButton);
+            window.draw(acceptButton);
+            window.draw(acceptText);
+            window.draw(refuseText);
+        }
+    }
+
+    void checkAccept(sf::RenderWindow& window, GameLogic& game, Player& p) {
+        sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
+
+        if (mousePosition.x >= acceptButton.getPosition().x && mousePosition.x <= acceptButton.getPosition().x + acceptButton.getSize().x
+            && mousePosition.y >= acceptButton.getPosition().y && mousePosition.y <= acceptButton.getPosition().y + acceptButton.getSize().y) {
+            if (game.getState() == 1) {
+                p.setDiamonds(p.getDiamonds() - 1);
+            }
+            else if (game.getState() == 2) {
+                p.setDiamonds(p.getDiamonds() + 1);
+            }
+            game.setState(0);
+            game.nextPlayer();
+        }
+    }
+
+    void checkRefuse(sf::RenderWindow& window, GameLogic& game, Player& p, Board& b) {
+        sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
+
+        if (mousePosition.x >= refuseButton.getPosition().x && mousePosition.x <= refuseButton.getPosition().x + refuseButton.getSize().x
+            && mousePosition.y >= refuseButton.getPosition().y && mousePosition.y <= refuseButton.getPosition().y + refuseButton.getSize().y) {
+            p.setSquarePos(b.getSquare(p.getSquarePos()).getLeadsTo(), b);
+            game.setState(0);
+            game.nextPlayer();
+        }
     }
 };
 
@@ -434,9 +486,13 @@ int main() {
                 window.close();
             }
             if (event.type == sf::Event::MouseButtonPressed) {
-                if (game.getState() == 0) {
-                    if (event.mouseButton.button == sf::Mouse::Left) {
+                if (event.mouseButton.button == sf::Mouse::Left) {
+                    if (game.getState() == 0) {
                         dice.checkDiceRoll(window, players[game.getCurPlayer()], board, game);
+                    }
+                    else {
+                        menu.checkAccept(window, game, players[game.getCurPlayer()]);
+                        menu.checkRefuse(window, game, players[game.getCurPlayer()], board);
                     }
                 }
             }
@@ -453,7 +509,7 @@ int main() {
         }
         dice.drawDice(window);
         leaderboard.drawLeaderboard(window, players, game);
-        menu.drawMenu(window);
+        menu.drawMenu(window, game);
 
         window.display();
     }
