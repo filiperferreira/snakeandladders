@@ -273,6 +273,7 @@ class Player {
                     }
 
                     squarePos = b.getSquare(squarePos).getLeadsTo();
+                    token.setPosition(b.getSquare(squarePos).getPosX() + xOffset, b.getSquare(squarePos).getPosY() + yOffset);
                     g.nextPlayer();
                 }
             }
