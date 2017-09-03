@@ -537,7 +537,7 @@ class Leaderboard {
     sf::Sprite gold;
 
     public:
-    Leaderboard(int n, vector<Player> p, TextureManager tm): players(vector<sf::CircleShape>(n)), goldText(vector<sf::Text>(n)), diamondText(vector<sf::Text>(n)), playerSprites(vector<sf::Sprite>(n)), textureManager(tm) {
+    Leaderboard(int n, vector<Player> p, TextureManager tm): players(vector<sf::CircleShape>(n)), playerSprites(vector<sf::Sprite>(n)), goldText(vector<sf::Text>(n)), diamondText(vector<sf::Text>(n)), textureManager(tm) {
         int x = 655;
         int y = 180;
 
