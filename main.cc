@@ -251,6 +251,10 @@ class Player {
 
         token.setPosition(b.getSquare(squarePos).getPosX() + xOffset, b.getSquare(squarePos).getPosY() + yOffset);
 
+        if (squarePos == 99) {
+            g.setState(3);
+        }
+
         if (b.getSquare(squarePos).getLeadsTo() != -1) {
             if (b.getSquare(squarePos).getLeadsTo() < squarePos) {
                 if (diamonds > 0) {
@@ -405,7 +409,7 @@ class LadderMenu {
     }
 
     void drawMenu(sf::RenderWindow& window, GameLogic g) {
-        if (g.getState() != 0) {
+        if (g.getState() != 0 && g.getState() != 3) {
             if (g.getState() == 1) {
                 acceptText.setString("Use Diamond");
                 refuseText.setString("Go Downstairs");
@@ -484,11 +488,16 @@ class LadderMenu {
 class Leaderboard {
     vector<sf::CircleShape> players;
     vector<sf::Text> goldText, diamondText;
+    sf::Text winText;
 
     public:
     Leaderboard(int n, vector<Player> p): players(vector<sf::CircleShape>(n)), goldText(vector<sf::Text>(n)), diamondText(vector<sf::Text>(n)) {
         int x = 655;
         int y = 180;
+
+        winText.setFont(font);
+        winText.setCharacterSize(50);
+        winText.setPosition(120, 120);
 
         for (int i = 0; i < n; i++) {
             players[i] = p[i].getShape();
@@ -523,6 +532,30 @@ class Leaderboard {
             window.draw(diamondText[i]);
         }
     }
+
+    void win(vector<Player> p, sf::RenderWindow& window) {
+        vector<int> scores(N_PLAYERS);
+
+        for (int i = 0; i < N_PLAYERS; i++) {
+            scores[i] = p[i].getGold() + p[i].getDiamonds() * 20;
+            if (p[i].getSquarePos() == 99) {
+                scores[i] += 50;
+            }
+        }
+
+        int winner = -1;
+        int highestScore = 0;
+        for (int i = 0; i < N_PLAYERS; i++) {
+            if (scores[i] > highestScore) {
+                highestScore = scores[i];
+                winner = i;
+            }
+        }
+
+        winText.setColor(p[winner].getShape().getFillColor());
+        winText.setString("Player " + to_string(winner + 1) + " wins!");
+        window.draw(winText);
+    }
 };
 
 int main() {
@@ -553,7 +586,7 @@ int main() {
                     if (game.getState() == 0) {
                         dice.checkDiceRoll(window, players[game.getCurPlayer()], board, game, players);
                     }
-                    else {
+                    else if (game.getState() != 3) {
                         menu.checkAccept(window, game, players[game.getCurPlayer()], players);
                         menu.checkRefuse(window, game, players[game.getCurPlayer()], board, players);
                     }
@@ -573,6 +606,10 @@ int main() {
         dice.drawDice(window);
         leaderboard.drawLeaderboard(window, players, game);
         menu.drawMenu(window, game);
+
+        if (game.getState() == 3) {
+            leaderboard.win(players, window);
+        }
 
         window.display();
     }
