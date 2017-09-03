@@ -137,13 +137,13 @@ class Square {
 class Board {
     int size;
     vector<Square> square;
-    //sf::Sprite ladder;
+    sf::Sprite ladder;
     TextureManager textureManager;
 
     public:
     Board(int s, TextureManager tm): size(s), textureManager(tm) {
         square = vector<Square>(size);
-        //ladder.setTexture(textureManager.getTexture("sprites/ladder.png"));
+        ladder.setTexture(textureManager.getTexture("sprites/ladder.png"));
     }
 
     void initBoard() {
@@ -201,9 +201,11 @@ class Board {
                     sf::Vertex(sf::Vector2f(square[i].getPosX() + 32, square[i].getPosY() + 32)),
                     sf::Vertex(sf::Vector2f(square[square[i].getLeadsTo()].getPosX() + 32, square[square[i].getLeadsTo()].getPosY() + 32))
                 };
+
                 if (square[i].getLeadsTo() > i) {
-                    //ladder.setPosition(sf::Vector2f(square[i].getPosX() + 32, square[i].getPosY() + 32));
-                    //window.draw(ladder);
+                    ladder.setPosition(sf::Vector2f(square[i].getPosX() + 32, square[i].getPosY() + 32));
+                    //ladder.setRotation(angle);
+                    window.draw(ladder);
                     line[0].color = sf::Color::Blue;
                     line[1].color = sf::Color::Blue;
                 }
