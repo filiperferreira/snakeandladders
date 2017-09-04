@@ -72,25 +72,38 @@ class Square {
     int leadsTo, gold;
     sf::RectangleShape square;
     sf::Text numberText, goldText;
+    sf::Sprite tile;
+    sf::Sprite goldTile;
+    sf::Sprite moss;
+    TextureManager textureManager;
 
     public:
     Square() {}
-    Square(int x, int y, int n): xPos(x), yPos(y), number(n) {
+    Square(int x, int y, int n, TextureManager tm): xPos(x), yPos(y), number(n), textureManager(tm) {
         gold = 5;
         leadsTo = -1;
 
         square = sf::RectangleShape(sf::Vector2f(63, 63));
         square.setPosition(x, y);
+        tile.setTexture(textureManager.getTexture("sprites/tile.png"));
+        moss.setTexture(textureManager.getTexture("sprites/moss.png"));
+        tile.setPosition(x, y);
+        moss.setPosition(x,y);
         square.setFillColor(sf::Color(139,69,19));
-        square.setOutlineThickness(1);
+        square.setOutlineThickness(0);
         square.setOutlineColor(sf::Color(0,0,0));
 
         numberText.setFont(font);
         numberText.setString(to_string(n));
         numberText.setCharacterSize(10);
-        numberText.setColor(sf::Color(0,0,0));
+        numberText.setColor(sf::Color(255,255,255));
         numberText.setPosition(x+2, y+2);
 
+        int randint = 1 + (rand() % static_cast<int>(3 - 1 + 1));
+
+        goldTile.setTexture(textureManager.getTexture("sprites/"+to_string(randint)+"golds.png"));
+        randint = 10 + (rand() % static_cast<int>(40 - 10 + 1));
+        goldTile.setPosition(x + randint,y + randint-4);
         goldText.setFont(font);
         goldText.setString(to_string(gold));
         goldText.setCharacterSize(18);
@@ -104,8 +117,11 @@ class Square {
 
     void drawSquare(sf::RenderWindow& window) {
         window.draw(square);
+        window.draw(tile);
+        window.draw(moss);
         window.draw(numberText);
         goldText.setString(to_string(gold));
+        window.draw(goldTile);
         window.draw(goldText);
     }
 
@@ -152,7 +168,7 @@ class Board {
         int Xmult = 1;
 
         for (int i = size; i > 0; i--) {
-            square[i-1] = Square(initX, initY, i);
+            square[i-1] = Square(initX, initY, i, textureManager);
             initX += 64 * Xmult;
             if (initX == 640 || initX == -64) {
                 Xmult *= -1;
