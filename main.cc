@@ -118,8 +118,8 @@ class Square {
 
     void drawSquare(sf::RenderWindow& window) {
         window.draw(square);
-        window.draw(tile);
-        window.draw(moss);
+        //window.draw(tile);
+        //window.draw(moss);
         window.draw(numberText);
         goldText.setString(to_string(gold));
         window.draw(goldTile);
@@ -220,17 +220,6 @@ class Board {
                 };
 
                 if (square[i].getLeadsTo() > i) {
-                    /*float a = (square[i].getPosY() - square[square[i].getLeadsTo()].getPosY());
-                    if (a < 0) a *= -1;
-                    float b = (square[square[i].getLeadsTo()].getPosX() - square[i].getPosX());
-                    if (b < 0) b *= -1;
-                    float c = sqrt(pow(a,2) + pow(b,2));*/
-
-                    //float angle = acos((pow(a,2) - pow(b,2) + pow(c,2))/(2*a*b)) * (360/(2*M_PI));
-
-                    ladder.setPosition(sf::Vector2f(square[i].getPosX() + 32, square[i].getPosY() + 32));
-                    //ladder.setRotation(angle);
-                    window.draw(ladder);
                     line[0].color = sf::Color::Blue;
                     line[1].color = sf::Color::Blue;
                 }
