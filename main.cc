@@ -44,27 +44,27 @@ class GameLogic {
 };
 
 class TextureManager {
-  map<string, sf::Texture> textures;
+    map<string, sf::Texture> textures;
+    
+    public:
+    TextureManager(): textures(){}
 
-public:
-  TextureManager(): textures(){}
+    const sf::Texture& getTexture(const std::string& filename) {
+        for(map<string, sf::Texture>::const_iterator it = textures.begin(); it != textures.end(); ++it){
+            if( filename == it->first ){
+                return it->second;
+            }
+        }
 
-  const sf::Texture& getTexture( const std::string& filename ){
-  	for(map<string, sf::Texture>::const_iterator it = textures.begin(); it != textures.end(); ++it){
-  		if( filename == it->first ){
-  			return it->second;
-  		}
-  	}
+        sf::Texture image;
+        if(image.loadFromFile( filename )){
+            textures[filename] = image;
+            return textures[filename];
+        }
 
-  	sf::Texture image;
-  	if(image.loadFromFile( filename )){
-  		textures[filename] = image;
-  		return textures[filename];
-  	}
-
-  	textures[filename] = image;
-  	return textures[filename];
-  }
+        textures[filename] = image;
+        return textures[filename];
+    }
 };
 
 class Square {
@@ -302,7 +302,7 @@ class Player {
                 }
                 else {
                     for (int i = 0; i < N_PLAYERS; i++) {
-                        if (ps[i].getShape().getFillColor() != token.getFillColor()) {
+                        if (ps[i].getPlayerSprite().getTexture() != minecart.getTexture()) {
                             if (ps[i].getSquarePos() == squarePos) {
                                 if (ps[i].getGold() >= 5) {
                                     ps[i].setGold(ps[i].getGold() - 5);
@@ -328,7 +328,7 @@ class Player {
         }
         else {
             for (int i = 0; i < N_PLAYERS; i++) {
-                if (ps[i].getShape().getFillColor() != token.getFillColor()) {
+                if (ps[i].getPlayerSprite().getTexture() != minecart.getTexture()) {
                     if (ps[i].getSquarePos() == squarePos) {
                         if (ps[i].getGold() >= 5) {
                             ps[i].setGold(ps[i].getGold() - 5);
@@ -484,7 +484,7 @@ class LadderMenu {
             }
 
             for (int i = 0; i < N_PLAYERS; i++) {
-                if (ps[i].getShape().getFillColor() != p.getShape().getFillColor()) {
+                if (ps[i].getPlayerSprite().getTexture() != p.getPlayerSprite().getTexture()) {
                     if (ps[i].getSquarePos() == p.getSquarePos()) {
                         if (ps[i].getGold() >= 5) {
                             ps[i].setGold(ps[i].getGold() - 5);
@@ -512,7 +512,7 @@ class LadderMenu {
         }
 
         for (int i = 0; i < N_PLAYERS; i++) {
-            if (ps[i].getShape().getFillColor() != p.getShape().getFillColor()) {
+            if (ps[i].getPlayerSprite().getTexture() != p.getPlayerSprite().getTexture()) {
                 if (ps[i].getSquarePos() == p.getSquarePos()) {
                     if (ps[i].getGold() >= 5) {
                         ps[i].setGold(ps[i].getGold() - 5);
@@ -538,7 +538,7 @@ class LadderMenu {
             p.setSquarePos(b.getSquare(p.getSquarePos()).getLeadsTo(), b);
 
             for (int i = 0; i < N_PLAYERS; i++) {
-                if (ps[i].getShape().getFillColor() != p.getShape().getFillColor()) {
+                if (ps[i].getPlayerSprite().getTexture() != p.getPlayerSprite().getTexture()) {
                     if (ps[i].getSquarePos() == p.getSquarePos()) {
                         if (ps[i].getGold() >= 5) {
                             ps[i].setGold(ps[i].getGold() - 5);
@@ -561,7 +561,7 @@ class LadderMenu {
         p.setSquarePos(b.getSquare(p.getSquarePos()).getLeadsTo(), b);
 
         for (int i = 0; i < N_PLAYERS; i++) {
-            if (ps[i].getShape().getFillColor() != p.getShape().getFillColor()) {
+            if (ps[i].getPlayerSprite().getTexture() != p.getPlayerSprite().getTexture()) {
                 if (ps[i].getSquarePos() == p.getSquarePos()) {
                     if (ps[i].getGold() >= 5) {
                         ps[i].setGold(ps[i].getGold() - 5);
