@@ -421,6 +421,10 @@ class Dice {
             player.move(value, board, game, vPlayers);
         }
     }
+
+    int getValue() {
+        return value;
+    }
 };
 
 class LadderMenu {
@@ -499,6 +503,33 @@ class LadderMenu {
         }
     }
 
+    void accept(GameLogic& game, Player& p, vector<Player>& ps) {
+        if (game.getState() == 1) {
+            p.setDiamonds(p.getDiamonds() - 1);
+        }
+        else if (game.getState() == 2) {
+            p.setDiamonds(p.getDiamonds() + 1);
+        }
+
+        for (int i = 0; i < N_PLAYERS; i++) {
+            if (ps[i].getShape().getFillColor() != p.getShape().getFillColor()) {
+                if (ps[i].getSquarePos() == p.getSquarePos()) {
+                    if (ps[i].getGold() >= 5) {
+                        ps[i].setGold(ps[i].getGold() - 5);
+                        p.setGold(p.getGold() + 5);
+                    }
+                    else {
+                        p.setGold(p.getGold() + ps[i].getGold());
+                        ps[i].setGold(0);
+                    }
+                }
+            }
+        }
+
+        game.setState(0);
+        game.nextPlayer();
+    }
+
     void checkRefuse(sf::RenderWindow& window, GameLogic& game, Player& p, Board& b, vector<Player>& ps) {
         sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
 
@@ -524,6 +555,28 @@ class LadderMenu {
             game.setState(0);
             game.nextPlayer();
         }
+    }
+
+    void refuse(GameLogic& game, Player& p, Board& b, vector<Player>& ps) {
+        p.setSquarePos(b.getSquare(p.getSquarePos()).getLeadsTo(), b);
+
+        for (int i = 0; i < N_PLAYERS; i++) {
+            if (ps[i].getShape().getFillColor() != p.getShape().getFillColor()) {
+                if (ps[i].getSquarePos() == p.getSquarePos()) {
+                    if (ps[i].getGold() >= 5) {
+                        ps[i].setGold(ps[i].getGold() - 5);
+                        p.setGold(p.getGold() + 5);
+                    }
+                    else {
+                        p.setGold(p.getGold() + ps[i].getGold());
+                        ps[i].setGold(0);
+                    }
+                }
+            }
+        }
+
+        game.setState(0);
+        game.nextPlayer();
     }
 };
 
@@ -647,6 +700,22 @@ int main() {
                     else if (game.getState() != 3) {
                         menu.checkAccept(window, game, players[game.getCurPlayer()], players);
                         menu.checkRefuse(window, game, players[game.getCurPlayer()], board, players);
+                    }
+                }
+            }
+            if (event.type == sf::Event::KeyPressed) {
+                if (game.getState() == 0) {
+                    if (event.key.code == sf::Keyboard::Space) {
+                        dice.rollDice();
+                        players[game.getCurPlayer()].move(dice.getValue(), board, game, players);
+                    }
+                }
+                else if (game.getState() != 3) {
+                    if (event.key.code == sf::Keyboard::Z) {
+                        menu.accept(game, players[game.getCurPlayer()], players);
+                    }
+                    if (event.key.code == sf::Keyboard::X) {
+                        menu.refuse(game, players[game.getCurPlayer()], board, players);
                     }
                 }
             }
