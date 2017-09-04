@@ -3,6 +3,7 @@
 #include <string>
 #include <random>
 #include <chrono>
+#include <cmath>
 
 #define N_PLAYERS 4
 
@@ -76,7 +77,7 @@ class Square {
     public:
     Square() {}
     Square(int x, int y, int n): xPos(x), yPos(y), number(n) {
-        gold = 5;
+        gold = 2;
         leadsTo = -1;
 
         square = sf::RectangleShape(sf::Vector2f(63, 63));
@@ -203,6 +204,14 @@ class Board {
                 };
 
                 if (square[i].getLeadsTo() > i) {
+                    /*float a = (square[i].getPosY() - square[square[i].getLeadsTo()].getPosY());
+                    if (a < 0) a *= -1;
+                    float b = (square[square[i].getLeadsTo()].getPosX() - square[i].getPosX());
+                    if (b < 0) b *= -1;
+                    float c = sqrt(pow(a,2) + pow(b,2));*/
+
+                    //float angle = acos((pow(a,2) - pow(b,2) + pow(c,2))/(2*a*b)) * (360/(2*M_PI));
+
                     ladder.setPosition(sf::Vector2f(square[i].getPosX() + 32, square[i].getPosY() + 32));
                     //ladder.setRotation(angle);
                     window.draw(ladder);
