@@ -81,7 +81,11 @@ class Square {
     public:
     Square() {}
     Square(int x, int y, int n, TextureManager tm): xPos(x), yPos(y), number(n), textureManager(tm) {
+<<<<<<< HEAD
         gold = 2;
+=======
+        gold = 5;
+>>>>>>> d842dd3550e7e060493ba7780ad80e2ba00ebf45
         leadsTo = -1;
 
         square = sf::RectangleShape(sf::Vector2f(63, 63));
